@@ -9,6 +9,28 @@ conda-frontend: conda
 keep-incomplete: true
 
 # ------------------------------------------------------------------
+#  Analysis modules
+#  Mandatory core stages always run: fastp, unicylcer, MASH taxonomy,
+#  and AMRFinderPlus. Toggle the optional analyses below as needed.
+# ------------------------------------------------------------------
+config:
+  run_coverage: true
+  run_checkm2: true
+  run_mlst: true
+  run_txsscan: true
+  run_mef: true
+  run_mashtree: true
+  run_resfinder: true
+  run_salmonella_serotyping: true
+  run_ecoli_pathotyping: true
+  pd_lookup: true
+  pd_backend: ftp
+  pd_comparator_limit: 10
+  pd_sample_metadata_tsv: ""
+  pd_isolates_tsv: ""
+  pd_exceptions_tsv: ""
+
+# ------------------------------------------------------------------
 #  Global resource pool — Snakemake schedules jobs so the running
 #  total never exceeds these values.
 #  mem_mb = 30000 (~30 GB) leaves ~2 GB headroom for the OS.

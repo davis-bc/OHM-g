@@ -13,6 +13,11 @@ import csv
 input_dir  = config["in_dir"]
 output_dir = config["out_dir"]
 mash_taxonomy_file = os.path.join(output_dir, "data", "mash", "mash_taxonomy.tsv")
+summary_workbook = os.path.join(output_dir, "SWAM-g_results.xlsx")
+pd_workbook = os.path.join(output_dir, "pd_isolate_metadata.xlsx")
+contig_map_file = os.path.join(output_dir, "contig_map.csv")
+mashtree_file = os.path.join(output_dir, "mashtree.nwk")
+enteroref_sketch_ready = os.path.join(output_dir, "data", "mash", ".enteroref_sketch_ready")
 
 def config_bool(key, default=False):
     raw = config.get(key, default)
@@ -20,12 +25,36 @@ def config_bool(key, default=False):
 
 
 debug_mode = config_bool("debug", False)
+run_coverage = config_bool("run_coverage", True)
+run_checkm2 = config_bool("run_checkm2", True)
+run_mlst = config_bool("run_mlst", True)
+run_txsscan = config_bool("run_txsscan", True)
+run_mef = config_bool("run_mef", True)
+run_mashtree = config_bool("run_mashtree", True)
+run_resfinder = config_bool("run_resfinder", True)
+run_salmonella_serotyping = config_bool("run_salmonella_serotyping", True)
+run_ecoli_pathotyping = config_bool("run_ecoli_pathotyping", True)
 pd_lookup_enabled = config_bool("pd_lookup", True)
 pd_lookup_backend = str(config.get("pd_backend", "ftp")).strip() or "ftp"
 pd_comparator_limit = int(config.get("pd_comparator_limit", 10))
 pd_sample_metadata_tsv = config.get("pd_sample_metadata_tsv")
 pd_isolates_tsv = config.get("pd_isolates_tsv")
 pd_exceptions_tsv = config.get("pd_exceptions_tsv")
+
+
+def expand_when(enabled, pattern, **wildcards):
+    return expand(pattern, **wildcards) if enabled else []
+
+
+def list_when(enabled, *paths):
+    return list(paths) if enabled else []
+
+
+def workflow_targets():
+    targets = [summary_workbook, pd_workbook, contig_map_file]
+    if run_mashtree:
+        targets.append(mashtree_file)
+    return targets
 
 # Helper: extract sample name from fastq filename
 def extract_sample_name(filename):
@@ -150,4 +179,4 @@ def load_amrfinder_organism_map(path):
                 organism_map[row['sample']] = row['amrfinderplus_organism']
     return organism_map
 
-amrfinder_organism_map = load_amrfinder_organism_map(os.path.join(output_dir, "data", "amrfinderplus", "amrfinder_species.tsv"))
+amrfinder_organism_map = load_amrfinder_organism_map(os.path.join(output_dir, "data", "amrfinderplus", "amrfinder_organism.tsv"))

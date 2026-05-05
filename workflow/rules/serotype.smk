@@ -268,7 +268,7 @@ rule txsscan:
 rule ectyper:
     input:
         symlink = os.path.join(output_dir, "data", "unicycler", "batch", "{sample}.fasta"),
-        ecsetup = os.path.join(output_dir, "data", "serotype", "E.coli", ".ectyper_setup_done.txt"),
+        ecsetup = enteroref_sketch_ready,
         mash    = mash_taxonomy_file
     output:
         ect = os.path.join(output_dir, "data", "serotype", "E.coli", "{sample}", "output.tsv")

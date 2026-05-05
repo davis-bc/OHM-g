@@ -5,7 +5,7 @@
 rule mash_classify:
     input:
         assembly  = os.path.join(output_dir, "data", "unicycler", "batch", "{sample}.fasta"),
-        msh_ready = os.path.join(output_dir, "data", "serotype", "E.coli", ".ectyper_setup_done.txt")
+        msh_ready = enteroref_sketch_ready
     output:
         mash_result = os.path.join(output_dir, "data", "mash", "{sample}.mash_screen.tsv")
     log:

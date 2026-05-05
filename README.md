@@ -50,10 +50,27 @@ Replace "/pathto/workspace" with where you want `SWAM-g` to live.
 cd /pathto/workspace
 git clone https://github.com/davis-bc/SWAM-g
 ```
-### Step 2. Configure your Slurm credentials
-Edit the `slurm_account` and `slurm_partition` fields in `config/slurm/config.yaml`.
+### Step 2. Configure your profile
+`SWAM-g` now uses the profile config files as the main user-facing entrypoint:
+
+- `config/slurm/config.yaml` for HPC runs
+- `config/local/config.yaml` for workstation runs
+
+Edit the `slurm_account` and `slurm_partition` fields in `config/slurm/config.yaml`, then set the optional analysis booleans in the profile's `config:` block. The mandatory core path always runs: `fastp`, `unicylcer`, MASH taxonomy, and AMRFinderPlus.
 
 ```yaml
+config:
+  run_coverage: true
+  run_checkm2: true
+  run_mlst: true
+  run_txsscan: true
+  run_mef: true
+  run_mashtree: true
+  run_resfinder: true
+  run_salmonella_serotyping: true
+  run_ecoli_pathotyping: true
+  pd_lookup: true
+
 default-resources:
   slurm_account: "your_account"
   slurm_partition: "your_partition"
@@ -127,7 +144,7 @@ Salmonella serotyping uses two complementary methods:
 Both methods are gated by the run-level MASH taxonomy table. If a sample is not classified as `g__Salmonella`, SWAM-g writes the expected placeholder TSV and skips the serotyping runtime for that sample.
 
 ### Running on a local workstation
-For running without Slurm (e.g., a workstation, laptop, or VM), use the included `run_swam-g_local.sh` script. It uses the `config/local/` profile, which caps CPU usage at 8 cores and total RAM at 30 GB, and serializes the memory-intensive MASH classify step automatically. This is a good way to validate the pipeline with the test data before running a full HPC batch.
+For running without Slurm (e.g., a workstation, laptop, or VM), use the included `run_swam-g_local.sh` script. It uses the `config/local/` profile, which caps CPU usage at 8 cores and total RAM at 30 GB, serializes the memory-intensive MASH classify step automatically, and exposes the same optional analysis booleans in its `config:` block. This is a good way to validate the pipeline with the test data before running a full HPC batch.
 
 ```bash
 bash run_swam-g_local.sh /path/to/input /path/to/output
@@ -168,18 +185,20 @@ Supported metadata columns are matched case-insensitively and may include:
 
 If `Sample` itself looks like an SRR accession (for example `SRR30768419`), `SWAM-g` will try to resolve the corresponding BioSample automatically through NCBI SRA metadata before joining against the PD table.
 
-For the bundled driver scripts, use explicit SWAM-g flags instead of appending raw `pd_lookup=true` tokens after the script arguments:
+The bundled driver scripts now take their PD behavior from the selected profile config file. Edit the profile `config:` block for persistent defaults, or use `--config` for one-off overrides:
 
 ```bash
-bash run_swam-g.sh "$input" "$output" --pd-lookup=false
+bash run_swam-g.sh "$input" "$output" \
+    --config pd_lookup=false
 
 bash run_swam-g.sh "$input" "$output" \
-    --pd-backend=table \
-    --pd-isolates-tsv="/path/to/pd_isolates.tsv" \
-    --pd-exceptions-tsv="/path/to/pd_isolate_exceptions.tsv"
+    --config \
+      pd_backend=table \
+      pd_isolates_tsv="/path/to/pd_isolates.tsv" \
+      pd_exceptions_tsv="/path/to/pd_isolate_exceptions.tsv"
 
 bash run_swam-g_local.sh /path/to/input /path/to/output \
-    --pd-sample-metadata-tsv="/path/to/sample_metadata.tsv"
+    --config pd_sample_metadata_tsv="/path/to/sample_metadata.tsv"
 ```
 
 If you are calling `snakemake` directly, the equivalent config looks like:

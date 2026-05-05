@@ -254,8 +254,10 @@ rule mef:
         set -euo pipefail
 
         started_at=$(date -Is)
+        tmp_root=$(mktemp -d "{params.temp_dir}/tmp.XXXXXX")
         on_error() {{
             rc=$?
+            rm -rf "$tmp_root"
             echo "[swamg-rule] mef"
             echo "[swamg-sample] {wildcards.sample}"
             echo "[swamg-host] $(hostname)"
@@ -271,6 +273,11 @@ rule mef:
         echo "[swamg-sample] {wildcards.sample}"
         echo "[swamg-host] $(hostname)"
         echo "[swamg-started-at] $started_at"
+
+        # MobileElementFinder uses Python's tempdir to place its transient BLAST
+        # database under $TMPDIR/mge_finder/database. Give each sample its own
+        # temp root to avoid parallel makeblastdb collisions on shared /tmp.
+        export TMPDIR="$tmp_root"
 
         # Rebuild a clean FASTA for MobileElementFinder. This strips a UTF-8 BOM,
         # normalizes line endings, trims header descriptions to the first token,
@@ -347,6 +354,7 @@ PY
             mefinder find -c {output.temp_fasta} $(dirname {output.mef})/{wildcards.sample} --temp-dir {params.temp_dir}
         fi
 
+        rm -rf "$tmp_root"
         trap - ERR
         echo "[swamg-finished-at] $(date -Is)"
         echo "[swamg-status] SUCCESS"

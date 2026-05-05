@@ -108,16 +108,16 @@ rule res_init:
     
 
 # ----------------------------------------
-#     ECTyper database setup
+#   Setup EnteroRef MASH sketch
 # ----------------------------------------
 
-rule ectyper_init:
+rule enteroref_sketch_init:
     output:
-        touch(os.path.join(output_dir, "data", "serotype", "E.coli", ".ectyper_setup_done.txt"))
+        touch(enteroref_sketch_ready)
     conda:
         "../envs/ectyper.yaml"
     benchmark:
-        os.path.join(output_dir, "data", "benchmarks", "init_ectyper.txt")
+        os.path.join(output_dir, "data", "benchmarks", "init_enteroref_sketch.txt")
     shell:
         """
         DB_DIR="dbs"

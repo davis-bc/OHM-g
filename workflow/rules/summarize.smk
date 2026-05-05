@@ -6,7 +6,7 @@ rule mashtree:
     input:
         symlink = expand(os.path.join(output_dir, "data", "unicycler", "batch", "{sample}.fasta"), sample=samples)
     output:
-        tree = os.path.join(output_dir, "mashtree.nwk")
+        tree = mashtree_file
     benchmark:
         os.path.join(output_dir, "data", "benchmarks", "mashtree.txt")
     threads: 8
@@ -50,29 +50,29 @@ rule pd_isolate_metadata:
 
 rule summarize_results:
     input:
-        checkm               = expand(os.path.join(output_dir, "data", "checkm2", "{sample}", "quality_report.tsv"), sample=samples),
+        checkm               = expand_when(run_checkm2, os.path.join(output_dir, "data", "checkm2", "{sample}", "quality_report.tsv"), sample=samples),
         mash                 = os.path.join(output_dir, "data", "mash", "mash_taxonomy.tsv"),
-        mlst                 = os.path.join(output_dir, "data", "mlst", "mlst.tsv"),
-        pd_metadata          = os.path.join(output_dir, "data", "pd", "pd_isolate_metadata.tsv"),
-        pd_comparators       = os.path.join(output_dir, "data", "pd", "pd_cluster_comparators.tsv"),
-        ectyper_files        = expand(os.path.join(output_dir, "data", "serotype", "E.coli", "{sample}", "output.tsv"), sample=samples),
-        resfinder_files      = expand(os.path.join(output_dir, "data", "resfinder", "{sample}", "ResFinder_results_tab.txt"), sample=samples),
-        pf_files             = expand(os.path.join(output_dir, "data", "resfinder", "{sample}", "PointFinder_results.txt"), sample=samples),
+        mlst                 = list_when(run_mlst, os.path.join(output_dir, "data", "mlst", "mlst.tsv")),
+        pd_metadata          = list_when(pd_lookup_enabled, os.path.join(output_dir, "data", "pd", "pd_isolate_metadata.tsv")),
+        pd_comparators       = list_when(pd_lookup_enabled, os.path.join(output_dir, "data", "pd", "pd_cluster_comparators.tsv")),
+        ectyper_files        = expand_when(run_ecoli_pathotyping, os.path.join(output_dir, "data", "serotype", "E.coli", "{sample}", "output.tsv"), sample=samples),
+        resfinder_files      = expand_when(run_resfinder, os.path.join(output_dir, "data", "resfinder", "{sample}", "ResFinder_results_tab.txt"), sample=samples),
+        pf_files             = expand_when(run_resfinder, os.path.join(output_dir, "data", "resfinder", "{sample}", "PointFinder_results.txt"), sample=samples),
         afp_files            = expand(os.path.join(output_dir, "data", "amrfinderplus", "{sample}.afp.tsv"), sample=samples),
-        seqsero_files        = expand(os.path.join(output_dir, "data", "serotype", "Salmonella", "{sample}", "SeqSero_result.tsv"), sample=samples),
-        sistr_files          = expand(os.path.join(output_dir, "data", "serotype", "Salmonella", "{sample}", "sistr.tsv"), sample=samples),
+        seqsero_files        = expand_when(run_salmonella_serotyping, os.path.join(output_dir, "data", "serotype", "Salmonella", "{sample}", "SeqSero_result.tsv"), sample=samples),
+        sistr_files          = expand_when(run_salmonella_serotyping, os.path.join(output_dir, "data", "serotype", "Salmonella", "{sample}", "sistr.tsv"), sample=samples),
         mobtyper_files       = expand(os.path.join(output_dir, "data", "mob-suite", "{sample}", "mobtyper_results.txt"), sample=samples),
-        coverage_files       = expand(os.path.join(output_dir, "data", "unicycler", "{sample}", "{sample}_coverage.tsv"), sample=samples),
-        mef_files            = expand(os.path.join(output_dir, "data", "mobileelementfinder", "{sample}", "{sample}.csv"), sample=samples),
+        coverage_files       = expand_when(run_coverage, os.path.join(output_dir, "data", "unicycler", "{sample}", "{sample}_coverage.tsv"), sample=samples),
+        mef_files            = expand_when(run_mef, os.path.join(output_dir, "data", "mobileelementfinder", "{sample}", "{sample}.csv"), sample=samples),
         contig_files         = expand(os.path.join(output_dir, "data", "mob-suite", "{sample}", "contig_report.txt"), sample=samples),
         mobtyper_blast_files = expand(os.path.join(output_dir, "data", "mob-suite", "{sample}", "biomarkers.blast.txt"), sample=samples),
-        txsscan_files        = expand(os.path.join(output_dir, "data", "txsscan", "{sample}", "all_systems.tsv"), sample=samples),
-        txsscan_files2       = expand(os.path.join(output_dir, "data", "txsscan", "{sample}", "all_systems.txt"), sample=samples),
-        prodigal_files       = expand(os.path.join(output_dir, "data", "unicycler", "{sample}", "{sample}.prot.faa"), sample=samples)
+        txsscan_files        = expand_when(run_txsscan, os.path.join(output_dir, "data", "txsscan", "{sample}", "all_systems.tsv"), sample=samples),
+        txsscan_files2       = expand_when(run_txsscan, os.path.join(output_dir, "data", "txsscan", "{sample}", "all_systems.txt"), sample=samples),
+        prodigal_files       = expand_when(run_txsscan, os.path.join(output_dir, "data", "unicycler", "{sample}", "{sample}.prot.faa"), sample=samples)
     output:
-        xlsx    = os.path.join(output_dir, "SWAM-g_results.xlsx"),
-        pd_xlsx = os.path.join(output_dir, "pd_isolate_metadata.xlsx"),
-        csv     = os.path.join(output_dir, "contig_map.csv")
+        xlsx    = summary_workbook,
+        pd_xlsx = pd_workbook,
+        csv     = contig_map_file
     params:
         debug = debug_mode
     conda:

@@ -23,7 +23,7 @@ include: "rules/serotype.smk"
 include: "rules/summarize.smk"
 
 
-localrules: mob_init, afp_init, txsscan_init, res_init, checkm_init, ectyper_init, symlink, mash_taxonomy, get_resfinder_species, get_amrfinder_organism, pd_isolate_metadata, summarize_results
+localrules: mob_init, afp_init, txsscan_init, res_init, checkm_init, enteroref_sketch_init, symlink, mash_taxonomy, get_resfinder_species, get_amrfinder_organism, pd_isolate_metadata, summarize_results
 
 # ------------------------------------------
 #   Define the target outputs for pipeline
@@ -31,7 +31,4 @@ localrules: mob_init, afp_init, txsscan_init, res_init, checkm_init, ectyper_ini
 
 rule all:
     input:
-        os.path.join(output_dir, "SWAM-g_results.xlsx"),
-        os.path.join(output_dir, "pd_isolate_metadata.xlsx"),
-        os.path.join(output_dir, "contig_map.csv"),
-        os.path.join(output_dir, "mashtree.nwk")
+        workflow_targets()
